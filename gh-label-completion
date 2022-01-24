@@ -17,7 +17,8 @@ __gh_label_completion() {
   _init_completion -s || return
 
   if [ "${words[1]}" = "pr" ]; then
-    if [ "${words[2]}" = "create" ] || [ "${words[5]}" = "create" ]; then
+    if [ "${words[2]}" = "create" ] || [ "${words[5]}" = "create" ] || \
+       [ "${words[2]}" = "list" ] || [ "${words[5]}" = "list" ]; then
       case "${prev}" in
         -l | --label)
           __gh_label_completion_labels_from_repo  
