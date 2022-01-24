@@ -6,21 +6,34 @@
 # オリジナルの補完関数を展開する
 eval "$(gh completion -s bash)"
 
+__gh_label_completion_labels_from_repo() {
+  local SAVE_IFS="${IFS}"
+  mapfile -t COMPREPLY < <(IFS=$'\n'; compgen -W "$(gh api "repos/{owner}/{repo}/labels" --jq '.[].name')" -- "${cur}";IFS="${SAVE_IFS}")
+}
+
 __gh_label_completion() {
   # local cur prev words cword split
-  local cur prev 
+  local cur prev words
   _init_completion -s || return
 
-  case "${prev}" in
-    --add-label)
-      local SAVE_IFS="${IFS}"
-      mapfile -t COMPREPLY < <(IFS=$'\n'; compgen -W "$(gh api "repos/{owner}/{repo}/labels" --jq '.[].name')" -- "${cur}";IFS="${SAVE_IFS}")
-      
-      # カンマ区切りの方法が不明なので一旦保留
-      # test "${#COMPREPLY[@]}" -eq 0 || compopt -o nospace
-      return
-      ;;
-  esac
+  if [ "${words[1]}" = "pr" ]; then
+    if [ "${words[2]}" = "create" ] || [ "${words[5]}" = "create" ]; then
+      case "${prev}" in
+        -l | --label)
+          __gh_label_completion_labels_from_repo  
+          return
+          ;;
+      esac
+
+    elif [ "${words[2]}" = "edit" ] || [ "${words[5]}" = "edit" ]; then
+      case "${prev}" in
+        --add-label)
+          __gh_label_completion_labels_from_repo  
+          return
+          ;;
+      esac
+    fi
+  fi
 }
 
 __gh_label_completion_start() {
