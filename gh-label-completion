@@ -11,6 +11,11 @@ __gh_label_completion_labels_from_repo() {
   mapfile -t COMPREPLY < <(IFS=$'\n'; compgen -W "$(gh api "repos/{owner}/{repo}/labels" --jq '.[].name')" -- "${cur}";IFS="${SAVE_IFS}")
 }
 
+__gh_label_completion_labels_from_target() {
+  local SAVE_IFS="${IFS}"
+  mapfile -t COMPREPLY < <(IFS=$'\n'; compgen -W "$(gh "${@}" --json labels --jq '.labels[].name')" -- "${cur}";IFS="${SAVE_IFS}")
+}
+
 __gh_label_completion() {
   # local cur prev words cword split
   local cur prev words
@@ -32,6 +37,19 @@ __gh_label_completion() {
           __gh_label_completion_labels_from_repo  
           return
           ;;
+        --remove-label)
+          local ISSUE=""
+          if [ "${words[2]}" = "edit" ] && [ "${words[3]:1:1}" != "-" ] ; then
+            ISSUE="${words[3]}"
+          fi
+          if [ "${words[5]}" = "edit" ] && [ "${words[6]:1:1}" != "-" ] ; then
+            ISSUE="${words[6]}"
+          fi
+          if [ -n  "${ISSUE}" ]; then
+            __gh_label_completion_labels_from_target issue view "${ISSUE}"
+          fi
+          return
+          ;;
       esac
     fi
 
@@ -49,6 +67,21 @@ __gh_label_completion() {
       case "${prev}" in
         --add-label)
           __gh_label_completion_labels_from_repo  
+          return
+          ;;
+        --remove-label)
+          local PR=""
+          if [ "${words[2]}" = "edit" ] && [ "${words[3]:1:1}" != "-" ] ; then
+            PR="${words[3]}"
+          fi
+          if [ "${words[5]}" = "edit" ] && [ "${words[6]:1:1}" != "-" ] ; then
+            PR="${words[6]}"
+          fi
+          if [ -n  "${PR}" ]; then
+            __gh_label_completion_labels_from_target pr view "${PR}"
+          else
+            __gh_label_completion_labels_from_target pr view
+          fi
           return
           ;;
       esac
