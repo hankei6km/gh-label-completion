@@ -1,7 +1,10 @@
 ###-begin-gh-completion-###
 # gh command completion script(custom) 
 #
-# --add-label でリポジトリのラベル一覧を候補にする.
+# "issue" と "pr" コマンドに対応.
+# - "-l" | "--label" でリポジトリのラベル一覧を候補にする
+# - "--add-label" でリポジトリのラベル一覧を候補にする
+# - "--remove-label" で対象のラベル一覧を候補にする
 
 # オリジナルの補完関数を展開する
 eval "$(gh completion -s bash)"
