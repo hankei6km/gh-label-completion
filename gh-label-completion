@@ -1,0 +1,38 @@
+###-begin-gh-completion-###
+# gh command completion script(custom) 
+#
+# --add-label でリポジトリのラベル一覧を候補にする.
+
+# オリジナルの補完関数を展開する
+eval "$(gh completion -s bash)"
+
+__gh_label_completion() {
+  # local cur prev words cword split
+  local cur prev 
+  _init_completion -s || return
+
+  case "${prev}" in
+    --add-label)
+      local SAVE_IFS="${IFS}"
+      mapfile -t COMPREPLY < <(IFS=$'\n'; compgen -W "$(gh api "repos/{owner}/{repo}/labels" --jq '.[].name')" -- "${cur}";IFS="${SAVE_IFS}")
+      
+      # カンマ区切りの方法が不明なので一旦保留
+      # test "${#COMPREPLY[@]}" -eq 0 || compopt -o nospace
+      return
+      ;;
+  esac
+}
+
+__gh_label_completion_start() {
+  # 通常の入力補完.
+  __start_gh
+  # 候補がなければ label 用の補完.
+  test "${#COMPREPLY[@]}" -eq 0 && __gh_label_completion
+}
+
+if [[ $(type -t compopt) = "builtin" ]]; then
+  complete -o default -F __gh_label_completion_start gh
+else
+  complete -o default -o nospace -F __gh_label_completion_start gh
+fi
+###-end-gh-completion-###
