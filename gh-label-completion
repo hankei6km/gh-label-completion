@@ -16,7 +16,26 @@ __gh_label_completion() {
   local cur prev words
   _init_completion -s || return
 
-  if [ "${words[1]}" = "pr" ]; then
+  if [ "${words[1]}" = "issue" ]; then
+    if [ "${words[2]}" = "create" ] || [ "${words[5]}" = "create" ] || \
+       [ "${words[2]}" = "list" ] || [ "${words[5]}" = "list" ]; then
+      case "${prev}" in
+        -l | --label)
+          __gh_label_completion_labels_from_repo  
+          return
+          ;;
+      esac
+
+    elif [ "${words[2]}" = "edit" ] || [ "${words[5]}" = "edit" ]; then
+      case "${prev}" in
+        --add-label)
+          __gh_label_completion_labels_from_repo  
+          return
+          ;;
+      esac
+    fi
+
+  elif [ "${words[1]}" = "pr" ]; then
     if [ "${words[2]}" = "create" ] || [ "${words[5]}" = "create" ] || \
        [ "${words[2]}" = "list" ] || [ "${words[5]}" = "list" ]; then
       case "${prev}" in
