@@ -37,7 +37,7 @@ Bash の入力補完用ファイルを保存するディレクトリーへ `gh-l
 - `--add-label` の候補一覧から設定済ラベルを除外していない
 - ラベル数が多いとすべてを表示しない(ページネーションをしていないので)
 - カンマ区切りの指定に対応していない
-    `--add-label enhance --add-label document` のように指定する
+    `--add-label enhancement --add-label documentation` のように指定する
 
 ## License
 
