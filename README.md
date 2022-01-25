@@ -2,6 +2,8 @@
 
 Bash で [GitHub CLI] を利用しているとき、ラベルの入力補完をするためのスクリプト。
 
+![入力補完のデモ表示しているスクリーンショットの agif](https://github.com/hankei6km/gh-label-completion/blob/master/docs/gh-label-completion.gif?raw=true)
+
 ## Install
 
 Bash の入力補完用ファイルを保存するディレクトリーへ `gh-label-completion` をコピー。
