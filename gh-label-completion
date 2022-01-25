@@ -9,9 +9,28 @@
 # オリジナルの補完関数を展開する
 eval "$(gh completion -s bash)"
 
+__gh_label_completion_labels_get_repo_from_words() {
+  local REPO=""
+  if [ "${words[2]}" = "-R" ] || [ "${words[2]}" = "--repo" ] ; then
+    local SAVE_IFS="${IFS}"
+    IFS="/"
+    local ELM
+    read -r -a ELM <<< "${words[3]}"
+    IFS="${SAVE_IFS}"
+    if [ "${#ELM[@]}" -eq 2 ] ; then
+      REPO="${ELM[0]}/${ELM[1]}" 
+    elif [ "${#ELM[@]}" -eq 3 ] ; then
+      REPO="${ELM[0]}/${ELM[1]}/${ELM[2]}" 
+    fi
+  fi
+  echo -n "${REPO}"
+}
+
 __gh_label_completion_labels_from_repo() {
   local SAVE_IFS="${IFS}"
-  mapfile -t COMPREPLY < <(IFS=$'\n'; compgen -W "$(gh api "repos/{owner}/{repo}/labels" --jq '.[].name')" -- "${cur}";IFS="${SAVE_IFS}")
+  local REPO_PATH="{owner}/{repo}"
+  test -n "${1}" && REPO_PATH="${1}"
+  mapfile -t COMPREPLY < <(IFS=$'\n'; compgen -W "$(gh api "repos/${REPO_PATH}/labels" --jq '.[].name')" -- "${cur}";IFS="${SAVE_IFS}")
 }
 
 __gh_label_completion_labels_from_target() {
@@ -29,15 +48,15 @@ __gh_label_completion() {
        [ "${words[2]}" = "list" ] || [ "${words[5]}" = "list" ]; then
       case "${prev}" in
         -l | --label)
-          __gh_label_completion_labels_from_repo  
+          __gh_label_completion_labels_from_repo "$(__gh_label_completion_labels_get_repo_from_words)"
           return
           ;;
       esac
 
-    elif [ "${words[2]}" = "edit" ] || [ "${words[5]}" = "edit" ]; then
+    elif [ "${words[2]}" = "edit" ] || [ "${words[4]}" = "edit" ]; then
       case "${prev}" in
         --add-label)
-          __gh_label_completion_labels_from_repo  
+          __gh_label_completion_labels_from_repo "$(__gh_label_completion_labels_get_repo_from_words)"
           return
           ;;
         --remove-label)
@@ -45,11 +64,15 @@ __gh_label_completion() {
           if [ "${words[2]}" = "edit" ] && [ "${words[3]:1:1}" != "-" ] ; then
             ISSUE="${words[3]}"
           fi
-          if [ "${words[5]}" = "edit" ] && [ "${words[6]:1:1}" != "-" ] ; then
-            ISSUE="${words[6]}"
+          if [ "${words[4]}" = "edit" ] && [ "${words[5]:1:1}" != "-" ] ; then
+            ISSUE="${words[5]}"
           fi
           if [ -n  "${ISSUE}" ]; then
-            __gh_label_completion_labels_from_target issue view "${ISSUE}"
+            local ARGS=("issue" "view" "${ISSUE}")
+            local REPO=""
+            REPO="$(__gh_label_completion_labels_get_repo_from_words)"
+            test -n "${REPO}" && ARGS=("${ARGS[@]}" "--repo" "${REPO}")
+            __gh_label_completion_labels_from_target "${ARGS[@]}"
           fi
           return
           ;;
@@ -61,30 +84,32 @@ __gh_label_completion() {
        [ "${words[2]}" = "list" ] || [ "${words[5]}" = "list" ]; then
       case "${prev}" in
         -l | --label)
-          __gh_label_completion_labels_from_repo  
+          __gh_label_completion_labels_from_repo "$(__gh_label_completion_labels_get_repo_from_words)"
           return
           ;;
       esac
 
-    elif [ "${words[2]}" = "edit" ] || [ "${words[5]}" = "edit" ]; then
+    elif [ "${words[2]}" = "edit" ] || [ "${words[4]}" = "edit" ]; then
       case "${prev}" in
         --add-label)
-          __gh_label_completion_labels_from_repo  
+          __gh_label_completion_labels_from_repo "$(__gh_label_completion_labels_get_repo_from_words)" 
           return
           ;;
         --remove-label)
           local PR=""
+          local REPO=""
           if [ "${words[2]}" = "edit" ] && [ "${words[3]:1:1}" != "-" ] ; then
             PR="${words[3]}"
           fi
-          if [ "${words[5]}" = "edit" ] && [ "${words[6]:1:1}" != "-" ] ; then
-            PR="${words[6]}"
+          if [ "${words[4]}" = "edit" ] && [ "${words[5]:1:1}" != "-" ] ; then
+            PR="${words[5]}"
           fi
-          if [ -n  "${PR}" ]; then
-            __gh_label_completion_labels_from_target pr view "${PR}"
-          else
-            __gh_label_completion_labels_from_target pr view
-          fi
+          local ARGS=("pr" "view")
+          local REPO=""
+          REPO="$(__gh_label_completion_labels_get_repo_from_words)"
+          test -n "${REPO}" && ARGS=("${ARGS[@]}" "--repo" "${REPO}")
+          test -n "${PR}" && ARGS=("${ARGS[@]}" "${PR}")
+          __gh_label_completion_labels_from_target "${ARGS[@]}"
           return
           ;;
       esac
